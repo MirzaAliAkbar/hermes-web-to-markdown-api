@@ -1,0 +1,6 @@
+*.db
+*.pyc
+__pycache__/
+state/wallet.json
+state/*.txt
+.env

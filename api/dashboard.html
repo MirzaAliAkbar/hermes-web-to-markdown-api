@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hermes Autonomous Services</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',system-ui,sans-serif; background:#0d1117; color:#c9d1d9; padding:20px; }
+.container { max-width:1200px; margin:0 auto; }
+.header { display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; border-bottom:1px solid #30363d; padding-bottom:15px; }
+.header h1 { font-size:24px; background: linear-gradient(90deg,#58a6ff,#3fb950); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.header .status { font-size:14px; color:#8b949e; }
+.header .status span { color:#3fb950; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; margin-bottom:24px; }
+.card { background:#161b22; border:1px solid #30363d; border-radius:8px; padding:20px; }
+.card h3 { font-size:14px; color:#8b949e; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px; }
+.card .value { font-size:28px; font-weight:600; color:#f0f6fc; }
+.card .sub { font-size:13px; color:#8b949e; margin-top:4px; }
+.card .positive { color:#3fb950; }
+.card .warn { color:#d29922; }
+.wallet-row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #21262d; }
+.wallet-row:last-child { border:0; }
+.wallet-label { color:#8b949e; }
+.wallet-value { font-family:'JetBrains Mono',monospace; font-size:13px; }
+table { width:100%; border-collapse:collapse; }
+th { text-align:left; color:#8b949e; font-size:12px; text-transform:uppercase; padding:8px 12px; border-bottom:2px solid #21262d; }
+td { padding:8px 12px; border-bottom:1px solid #21262d; font-size:14px; }
+tr:hover td { background:#1c2128; }
+.pulse { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; }
+.pulse.green { background:#3fb950; box-shadow:0 0 8px #3fb95044; }
+.badge { display:inline-block; padding:2px 8px; border-radius:12px; font-size:11px; background:#1f6feb33; color:#58a6ff; border:1px solid #1f6feb66; }
+.tier-bar { height:6px; border-radius:3px; background:#21262d; margin-top:4px; overflow:hidden; }
+.tier-bar-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,#58a6ff,#3fb950); transition:width 0.5s; }
+#footer { text-align:center; margin-top:40px; font-size:12px; color:#484f58; border-top:1px solid #21262d; padding-top:20px; }
+.loading { text-align:center; padding:40px; color:#484f58; }
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+  <div>
+    <h1>⚡ Hermes Autonomous Services</h1>
+    <div class="status"><span>●</span> Operational · <span id="uptime">...</span></div>
+  </div>
+  <div>
+    <span class="badge" id="halal-badge">✓ Jafari Halal</span>
+    <span class="badge" id="phase-badge">Phase 2: Execution</span>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h3>Wallet Balance</h3>
+    <div class="value" id="usdt-balance">--</div>
+    <div class="sub" id="eth-balance">ETH: --</div>
+  </div>
+  <div class="card">
+    <h3>Total Revenue</h3>
+    <div class="value positive" id="total-revenue">$0.00</div>
+    <div class="sub" id="payment-count">0 payments received</div>
+  </div>
+  <div class="card">
+    <h3>Active API Keys</h3>
+    <div class="value" id="active-keys">--</div>
+    <div class="sub" id="total-requests">-- total requests</div>
+  </div>
+  <div class="card">
+    <h3>Product Health</h3>
+    <div class="value" id="product-status">Online</div>
+    <div class="sub" id="product-name">Web-to-Markdown API</div>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h3>Deposit Address</h3>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#58a6ff;word-break:break-all;background:#0d1117;padding:10px;border-radius:4px;border:1px solid #30363d;" id="wallet-address">--</div>
+    <div class="sub" style="margin-top:8px">Send USDT (ERC-20) or ETH to activate</div>
+  </div>
+  <div class="card">
+    <h3>Pricing Tiers</h3>
+    <div id="tiers"></div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:24px">
+  <h3>Recent Payments</h3>
+  <div id="payments-list">
+    <div class="loading">No payments yet</div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:24px">
+  <h3>Latest Strategy</h3>
+  <div id="strategy">...</div>
+</div>
+
+<div id="footer">
+Hermes Autonomous Services · 2026 · Jafari Halal Compliant
+</div>
+</div>
+
+<script>
+const API = window.location.origin;
+
+async function refresh() {
+  try {
+    // Fetch all data in parallel
+    const [root, billing, health] = await Promise.all([
+      fetch(API + '/').then(r => r.json()).catch(() => ({})),
+      fetch(API + '/billing').then(r => r.json()).catch(() => ({})),
+      fetch(API + '/dashboard-data').then(r => r.json()).catch(() => ({})),
+    ]);
+
+    if (health.wallet_usdt !== undefined) {
+      document.getElementById('usdt-balance').textContent = `$${health.wallet_usdt.toFixed(2)} USDT`;
+      document.getElementById('eth-balance').textContent = `ETH: ${health.wallet_eth.toFixed(6)}`;
+    }
+
+    if (health.total_revenue !== undefined) {
+      document.getElementById('total-revenue').textContent = `$${health.total_revenue.toFixed(2)}`;
+      document.getElementById('payment-count').textContent = `${health.payment_count || 0} payments received`;
+    }
+
+    if (health.active_keys !== undefined) {
+      document.getElementById('active-keys').textContent = health.active_keys;
+      document.getElementById('total-requests').textContent = `${health.total_requests || 0} total requests`;
+    }
+
+    if (billing.wallet_address) {
+      document.getElementById('wallet-address').textContent = billing.wallet_address;
+    }
+
+    if (billing.tiers) {
+      document.getElementById('tiers').innerHTML = billing.tiers.map(t => `
+        <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;border-bottom:1px solid #21262d">
+          <span>${t.name}</span>
+          <span>${t.amount_usd === 0 ? 'Free' : '$' + t.amount_usd}</span>
+          <span style="color:#8b949e">${t.requests_per_day.toLocaleString()}/day</span>
+        </div>
+      `).join('');
+    }
+
+    if (health.payments && health.payments.length > 0) {
+      document.getElementById('payments-list').innerHTML = `
+        <table>
+          <tr><th>Date</th><th>From</th><th>Amount</th><th>Tier</th><th>Key</th></tr>
+          ${health.payments.map(p => `
+            <tr>
+              <td>${p.date || '--'}</td>
+              <td style="font-family:monospace;font-size:12px">${(p.from || '').slice(0,14)}...</td>
+              <td style="color:#3fb950">$${p.amount.toFixed(2)}</td>
+              <td>${p.tier || '--'}</td>
+              <td style="font-family:monospace;font-size:12px">${(p.api_key || '').slice(0,12)}...</td>
+            </tr>
+          `).join('')}
+        </table>
+      `;
+    }
+
+    if (health.strategy) {
+      document.getElementById('strategy').textContent = health.strategy;
+    }
+
+    document.getElementById('uptime').textContent = new Date().toLocaleTimeString();
+  } catch(e) {
+    console.error('Refresh error:', e);
+  }
+}
+
+refresh();
+setInterval(refresh, 15000);
+</script>
+</body>
+</html>

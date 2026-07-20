@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+"""Update business state.json with current status"""
+import json
+from pathlib import Path
+
+state = {
+    "business": "Hermes Autonomous Services",
+    "founded": "2026-07-20",
+    "founder": "Ali",
+    "operator": "Hermes Agent",
+    "jurisdiction": "Jafari Fiqh - Halal only",
+    "phase": "2-execution",
+    "current_product": "Web-to-Markdown API",
+    "products": [
+        {
+            "name": "Web-to-Markdown API",
+            "version": "1.0.0",
+            "status": "live",
+            "public_url": "https://collectors-nearly-lyrics-press.trycloudflare.com",
+            "local_url": "http://localhost:8777",
+            "endpoints": ["/", "/health", "/extract", "/docs"],
+            "pricing": "Free tier: 100 req/day. Contact for paid plans.",
+            "halal": True
+        }
+    ],
+    "revenue": 0,
+    "expenses": 0,
+    "profit": 0,
+    "infrastructure": {
+        "api_server": "uvicorn (background process)",
+        "tunnel": "Cloudflare Tunnel (trycloudflare.com)",
+        "database": "SQLite (api_keys.db)",
+        "host": "Lenovo ThinkPad (24/7)"
+    },
+    "blockers": [
+        "No payment gateway (Stripe needs card - blocked)",
+        "No public domain (trycloudflare URL is temporary)"
+    ],
+    "lessons": [
+        "System Python 3.13 has PEP 668 restrictions - need to use Hermes venv Python",
+        "Cloudflare quick tunnel works without account/card - good for v1",
+        "trafilatura extracts better markdown than readability"
+    ],
+    "daily_strategy": {},
+    "failed_attempts": [],
+    "archived_products": []
+}
+
+Path("/home/ali/business/state.json").write_text(json.dumps(state, indent=2))
+print("state.json updated")
