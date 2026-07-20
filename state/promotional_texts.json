@@ -1,0 +1,5 @@
+{
+  "twitter": "Need clean web content for your AI agent?\n\nPass any URL \u2192 get markdown.\n\n\u2705 Built for LLMs & agents\n\u2705 Auto-payments via USDT\n\u2705 Halal (Jafari compliant)\n\nCheck it out: https://collectors-nearly-lyrics-press.trycloudflare.com",
+  "reddit": "Built a Web-to-Markdown API for AI agents\n\nI built a simple API that takes any URL and returns clean markdown. Designed for LLM consumption, automated agents, and developers.\n\n- Free tier: 100 req/day\n- Paid: $5 USDT for 10K req/day\n- Auto-payment via USDT/ETH (no KYC)\n- Open source: https://github.com/MirzaAliAkbar/hermes-web-to-markdown-api\n\nWould love feedback. Jafari Halal compliant.",
+  "hackernews": "Show HN: Web-to-Markdown API with Auto-Crypto Payments\n\nI built a content extraction API that returns clean markdown from URLs. Designed for AI agents and developers.\n\nKey features:\n- Single POST /extract endpoint\n- USDT/ETH auto-payment (no KYC needed)\n- Works with any LLM or agent framework\n- Self-hosted, private, no data logging\n\nTech: FastAPI + trafilatura + Ethereum\n\nEverything is open source. Would appreciate feedback."
+}

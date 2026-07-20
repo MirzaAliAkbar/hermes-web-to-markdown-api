@@ -13,9 +13,10 @@ import json
 import hashlib
 import time
 import sqlite3
+import sys
 from datetime import datetime, timedelta
 from fastapi import FastAPI, HTTPException, Header, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from pydantic import BaseModel
 import trafilatura
 import httpx
@@ -89,6 +90,34 @@ async def root():
         "halal": True,
         "jurisdiction": "Jafari Fiqh"
     }
+
+
+AGENT_JSON = os.path.join(os.path.dirname(__file__), "agent.json")
+
+
+@app.get("/agent.json")
+async def agent_discovery():
+    """AI agent discovery file - lets other agents find this API."""
+    if os.path.exists(AGENT_JSON):
+        with open(AGENT_JSON) as f:
+            return JSONResponse(json.load(f))
+    return {"error": "Not found"}
+
+
+@app.get("/robots.txt")
+async def robots():
+    return HTMLResponse("User-agent: *\nAllow: /\nSitemap: https://collectors-nearly-lyrics-press.trycloudflare.com/sitemap.xml\n")
+
+
+@app.get("/sitemap.xml")
+async def sitemap():
+    return HTMLResponse("""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<url><loc>https://collectors-nearly-lyrics-press.trycloudflare.com/</loc><priority>1.0</priority></url>
+<url><loc>https://collectors-nearly-lyrics-press.trycloudflare.com/billing</loc><priority>0.9</priority></url>
+<url><loc>https://collectors-nearly-lyrics-press.trycloudflare.com/dashboard</loc><priority>0.8</priority></url>
+<url><loc>https://collectors-nearly-lyrics-press.trycloudflare.com/docs</loc><priority>0.7</priority></url>
+</urlset>""")
 
 
 @app.get("/billing")
@@ -263,7 +292,6 @@ TIER_NAMES = {10000: "Starter", 50000: "Pro", 200000: "Enterprise"}
 @app.get("/dashboard")
 async def dashboard():
     if os.path.exists(DASHBOARD_HTML):
-        from fastapi.responses import HTMLResponse
         with open(DASHBOARD_HTML) as f:
             return HTMLResponse(f.read())
     return {"error": "Dashboard not found"}
@@ -274,6 +302,7 @@ async def dashboard_data():
     # Wallet balance
     usdt = eth = 0
     try:
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
         from scripts.payment_monitor import check_balances, get_wallet_address
         wallet = get_wallet_address()
         usdt, eth = check_balances(wallet)

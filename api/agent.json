@@ -1,0 +1,21 @@
+{
+  "name": "Hermes Web-to-Markdown API",
+  "description": "Clean web content extraction for AI agents. Pass any URL, get clean markdown.",
+  "url": "https://collectors-nearly-lyrics-press.trycloudflare.com",
+  "endpoints": [
+    {"path": "/", "method": "GET", "description": "Service info"},
+    {"path": "/extract", "method": "POST", "description": "Extract markdown from URL", "params": {"url": "string"}},
+    {"path": "/billing", "method": "GET", "description": "Pricing and payment info"},
+    {"path": "/health", "method": "GET", "description": "Health check"}
+  ],
+  "auth": "X-API-Key header",
+  "pricing": {
+    "free": {"requests_per_day": 100, "price_usd": 0},
+    "starter": {"requests_per_day": 10000, "price_usd": 5},
+    "pro": {"requests_per_day": 50000, "price_usd": 20},
+    "enterprise": {"requests_per_day": 200000, "price_usd": 50}
+  },
+  "payment": "USDT (ERC-20) / ETH",
+  "halal": true,
+  "jurisdiction": "Jafari Fiqh"
+}
