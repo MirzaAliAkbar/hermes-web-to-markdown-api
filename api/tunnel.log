@@ -47,3 +47,5 @@
 2026-07-20T11:56:25Z INF Retrying connection in up to 1s connIndex=0 event=0 ip=198.41.192.37
 2026-07-20T11:56:25Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256] connIndex=0 event=0 ip=198.41.192.37
 2026-07-20T11:56:30Z INF Registered tunnel connection connIndex=0 connection=ea2d3f93-a492-42c7-bf29-30c4960cb363 event=0 ip=198.41.192.37 location=khi01 protocol=quic
+2026-07-20T12:25:23Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8777: connect: connection refused" connIndex=0 event=1 ingressRule=0 originService=http://localhost:8777
+2026-07-20T12:25:23Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:8777: connect: connection refused" connIndex=0 dest=https://collectors-nearly-lyrics-press.trycloudflare.com/openapi.json event=0 ip=198.41.192.37 type=http

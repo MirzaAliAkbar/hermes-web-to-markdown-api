@@ -21,6 +21,8 @@ from pydantic import BaseModel
 import trafilatura
 import httpx
 from api.activity import log, set_focus, set_goal, increment_stat, get_status
+from api.monitor import get_db as get_monitor_db, check_monitor, check_all_due
+import uuid
 
 app = FastAPI(
     title="Hermes Web-to-Markdown API",
@@ -98,6 +100,15 @@ async def log_startup():
     log("system", "API server started")
     set_focus("Serving Web-to-Markdown API")
     set_goal("Get first API user or $1 revenue today")
+
+
+@app.get("/free-tool")
+async def free_tool():
+    html_path = os.path.join(os.path.dirname(__file__), "free-tool.html")
+    if os.path.exists(html_path):
+        with open(html_path) as f:
+            return HTMLResponse(f.read())
+    return {"error": "Tool page not found"}
 
 
 @app.get("/status")
@@ -383,3 +394,86 @@ async def check_usage(api_key: str):
     ).fetchone()
     conn.close()
     return dict(rows) if rows else {"total": 0, "success": 0, "errors": 0}
+
+
+# ═══════════════════════════════════════════
+# SECOND PRODUCT: Website Change Monitor API
+# ═══════════════════════════════════════════
+
+class MonitorCreateRequest(BaseModel):
+    url: str
+    interval_minutes: int = 60
+    webhook_url: str = ""
+
+
+MONITOR_DB_PATH = os.path.join(os.path.dirname(__file__), "..", "state", "monitors.db")
+
+
+@app.get("/v2")
+async def v2_root():
+    return {
+        "product": "Hermes Website Change Monitor",
+        "version": "1.0.0",
+        "description": "Monitor webpages for changes. Get alerted when content updates.",
+        "endpoints": {
+            "create": "POST /v2/monitor/create",
+            "list": "GET /v2/monitor/list (X-API-Key header)",
+            "delete": "POST /v2/monitor/delete",
+            "check": "POST /v2/monitor/check/{id}"
+        },
+        "pricing": {
+            "free": "1 URL, checks every 24h",
+            "starter": "$5 for 10 URLs, checks every 1h",
+            "pro": "$20 for 50 URLs, checks every 15min"
+        },
+        "payment": "Same wallet as main API: see /billing",
+        "halal": True
+    }
+
+
+@app.post("/v2/monitor/create")
+async def create_monitor(req: MonitorCreateRequest, x_api_key: str = Header(None)):
+    if not x_api_key:
+        raise HTTPException(401, "Missing X-API-Key header")
+
+    conn = get_db()
+    key_row = conn.execute("SELECT * FROM api_keys WHERE key = ? AND active = 1", (x_api_key,)).fetchone()
+    conn.close()
+    if not key_row:
+        raise HTTPException(401, "Invalid API key")
+
+    monitor_id = str(uuid.uuid4())[:8]
+    mconn = get_monitor_db()
+    mconn.execute(
+        "INSERT INTO monitors (id, api_key, url, interval_minutes, webhook_url) VALUES (?, ?, ?, ?, ?)",
+        (monitor_id, x_api_key, req.url, req.interval_minutes, req.webhook_url)
+    )
+    mconn.commit()
+    mconn.close()
+
+    log("monitor", f"Created monitor {monitor_id} for {req.url[:50]}...")
+    return {"monitor_id": monitor_id, "url": req.url, "status": "active"}
+
+
+@app.get("/v2/monitor/list")
+async def list_monitors(x_api_key: str = Header(None)):
+    if not x_api_key:
+        raise HTTPException(401, "Missing X-API-Key header")
+
+    mconn = get_monitor_db()
+    rows = mconn.execute(
+        "SELECT id, url, interval_minutes, webhook_url, last_checked, active, change_count FROM monitors WHERE api_key = ? ORDER BY created_at DESC",
+        (x_api_key,)
+    ).fetchall()
+    mconn.close()
+
+    return {"monitors": [dict(r) for r in rows]}
+
+
+@app.post("/v2/monitor/check/{monitor_id}")
+async def check_now(monitor_id: str, x_api_key: str = Header(None)):
+    if not x_api_key:
+        raise HTTPException(401, "Missing X-API-Key header")
+
+    result = await check_monitor(monitor_id)
+    return result

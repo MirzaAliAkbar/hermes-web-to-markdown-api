@@ -1,0 +1,18 @@
+{
+  "name": "Hermes Website Change Monitor",
+  "description": "Monitor any webpage for changes and get notified via webhook. Pay per URL tracked.",
+  "version": "1.0.0",
+  "status": "building",
+  "endpoints": [
+    {"path": "/v2/monitor/create", "method": "POST", "description": "Start monitoring a URL"},
+    {"path": "/v2/monitor/list", "method": "GET", "description": "List your monitored URLs"},
+    {"path": "/v2/monitor/delete", "method": "POST", "description": "Stop monitoring a URL"}
+  ],
+  "pricing": {
+    "free": {"urls": 1, "check_interval": "24h"},
+    "starter": {"price_usd": 5, "urls": 10, "check_interval": "1h"},
+    "pro": {"price_usd": 20, "urls": 50, "check_interval": "15min"}
+  },
+  "payment": "USDT (ERC-20) / ETH — same wallet as Web-to-Markdown API",
+  "halal": true
+}
