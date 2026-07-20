@@ -96,6 +96,16 @@ tr:hover td { background:#1c2128; }
   <div id="strategy">...</div>
 </div>
 
+<div class="card" style="margin-bottom:24px">
+  <h3 style="display:flex;align-items:center;gap:8px">
+    <span class="pulse green"></span> Live Activity Feed
+    <span style="font-size:11px;color:#484f58;font-weight:normal" id="activity-count"></span>
+  </h3>
+  <div id="activity-feed">
+    <div class="loading">Hermes is starting up...</div>
+  </div>
+</div>
+
 <div id="footer">
 Hermes Autonomous Services · 2026 · Jafari Halal Compliant
 </div>
@@ -162,6 +172,30 @@ async function refresh() {
     if (health.strategy) {
       document.getElementById('strategy').textContent = health.strategy;
     }
+
+    // Fetch activity feed
+    try {
+      const statusResp = await fetch(API + '/status').then(r => r.json());
+      const feed = document.getElementById('activity-feed');
+      const count = document.getElementById('activity-count');
+      if (statusResp.activities && statusResp.activities.length > 0) {
+        count.textContent = `(${statusResp.activities.length} actions)`;
+        feed.innerHTML = statusResp.activities.slice(0, 15).map(a => `
+          <div style="display:flex;gap:10px;padding:6px 0;border-bottom:1px solid #21262d;font-size:13px">
+            <span style="color:#484f58;white-space:nowrap;font-family:monospace;font-size:11px">${(a.time || '').slice(11,19)}</span>
+            <span style="color:${a.action === 'revenue' ? '#3fb950' : a.action === 'error' ? '#f85149' : '#58a6ff'};white-space:nowrap">${a.action}</span>
+            <span style="color:#8b949e">${a.detail || ''}</span>
+          </div>
+        `).join('');
+        // Update current focus
+        if (statusResp.current_focus) {
+          document.getElementById('product-status').textContent = statusResp.current_focus;
+        }
+        if (statusResp.today_goal) {
+          document.getElementById('strategy').textContent = '🎯 ' + statusResp.today_goal;
+        }
+      }
+    } catch(e) {}
 
     document.getElementById('uptime').textContent = new Date().toLocaleTimeString();
   } catch(e) {

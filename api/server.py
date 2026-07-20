@@ -20,6 +20,7 @@ from fastapi.responses import JSONResponse, HTMLResponse
 from pydantic import BaseModel
 import trafilatura
 import httpx
+from api.activity import log, set_focus, set_goal, increment_stat, get_status
 
 app = FastAPI(
     title="Hermes Web-to-Markdown API",
@@ -90,6 +91,19 @@ async def root():
         "halal": True,
         "jurisdiction": "Jafari Fiqh"
     }
+
+
+@app.on_event("startup")
+async def log_startup():
+    log("system", "API server started")
+    set_focus("Serving Web-to-Markdown API")
+    set_goal("Get first API user or $1 revenue today")
+
+
+@app.get("/status")
+async def status():
+    """Live activity feed - shows what Hermes is doing right now."""
+    return get_status()
 
 
 AGENT_JSON = os.path.join(os.path.dirname(__file__), "agent.json")
